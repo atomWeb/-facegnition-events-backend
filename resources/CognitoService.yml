@@ -1,0 +1,43 @@
+UserPool:
+  Type: AWS::Cognito::UserPool
+  Properties:
+    UserPoolName: userpool-${self:custom.stack_name}
+    UsernameAttributes:
+      - email
+    AutoVerifiedAttributes:
+      - email
+    AdminCreateUserConfig:
+      AllowAdminCreateUserOnly: True
+
+UserPoolClient:
+  Type: AWS::Cognito::UserPoolClient
+  Properties:
+    ClientName: userpool-client-${self:custom.stack_name}
+    AllowedOAuthFlows:
+      - implicit
+    AllowedOAuthFlowsUserPoolClient: true
+    AllowedOAuthScopes:
+      - phone
+      - email
+      - openid
+      - profile
+      - aws.cognito.signin.user.admin
+    UserPoolId:
+      Ref: UserPool
+    CallbackURLs:
+      - ${self:custom.app_domain}
+    LogoutURLs:
+      - ${self:custom.app_domain}
+    ExplicitAuthFlows:
+      - ALLOW_USER_SRP_AUTH
+      - ALLOW_REFRESH_TOKEN_AUTH
+    GenerateSecret: false
+    SupportedIdentityProviders:
+      - COGNITO
+
+UserPoolDomain:
+  Type: AWS::Cognito::UserPoolDomain
+  Properties:
+    UserPoolId:
+      Ref: UserPool
+    Domain: userpool-${self:custom.domain_suffix}

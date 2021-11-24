@@ -1,0 +1,15 @@
+PersonsTableIAM:
+  Effect: Allow
+  Action:
+    - dynamodb:Query
+    - dynamodb:Scan
+    - dynamodb:GetItem
+    - dynamodb:PutItem
+    - dynamodb:UpdateItem
+    - dynamodb:DeleteItem
+  Resource:
+    - ${self:custom.PersonsTable.arn}
+    - !Join [
+        "/",
+        ["${self:custom.PersonsTable.arn}"],
+      ]

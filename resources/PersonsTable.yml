@@ -1,0 +1,17 @@
+PersonsTable:
+  Type: AWS::DynamoDB::Table
+  Properties:
+    TableName: PersonsTable-${self:custom.stack_name}
+    AttributeDefinitions: 
+      - AttributeName: faceid
+        AttributeType: S
+      - AttributeName: name
+        AttributeType: S
+    KeySchema: 
+      - AttributeName: faceid
+        KeyType: HASH
+      - AttributeName: name
+        KeyType: RANGE
+    ProvisionedThroughput: 
+      ReadCapacityUnits: 1
+      WriteCapacityUnits: 1

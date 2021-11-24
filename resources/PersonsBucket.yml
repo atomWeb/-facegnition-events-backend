@@ -1,0 +1,18 @@
+PersonsBucket:
+  Type: "AWS::S3::Bucket"
+  DeletionPolicy: Delete
+  Properties:
+    BucketName: ${self:custom.PersonsBucket.name}
+    CorsConfiguration:
+      CorsRules:
+        - AllowedHeaders:
+            - "content-type"
+          AllowedMethods:
+            - GET
+            - PUT
+          AllowedOrigins:
+            - "https://facegnition.ddns.net"
+            - "https://nabudev.duckdns.org"
+            - "http://localhost:4200"
+          Id: myCORSRuleId1
+          MaxAge: 3600

@@ -1,0 +1,73 @@
+service: facegnition-events
+
+provider:
+  name: aws
+  runtime: python3.8
+  lambdaHashingVersion: 20201221
+  region: us-east-1
+  httpApi:
+    authorizers:
+      serviceAuthorizer:
+        identitySource: $request.header.Authorization
+        issuerUrl:
+          Fn::Join:
+            - ""
+            - - "https://cognito-idp."
+              - "${self:custom.region}"
+              - ".amazonaws.com/"
+              - Ref: UserPool
+        audience:
+          - Ref: UserPoolClient  
+  stage: ${opt:stage, 'dev'}
+  environment:
+    REGION: ${self:custom.region}
+    PERSONS_TABLE: ${self:custom.PersonsTable.name}
+    EVENTS_TABLE: ${self:custom.EventsTable.name}
+    PERSONS_BUCKET: ${self:custom.PersonsBucket.name}
+  iam:
+    role:
+      statements:
+        - ${file(iam/PersonsTableIAM.yml):PersonsTableIAM}
+        - ${file(iam/EventsTableIAM.yml):EventsTableIAM}
+        - ${file(iam/PersonsBucketIAM.yml):PersonsBucketIAM}
+        # Allow Lambda to write logs to CloudWatch
+        - Effect: Allow
+          Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          Resource: arn:aws:logs:*:*:*        
+
+resources:
+  Resources:
+    PersonsTable: ${file(resources/PersonsTable.yml):PersonsTable}
+    EventsTable: ${file(resources/EventsTable.yml):EventsTable}
+    PersonsBucket: ${file(resources/PersonsBucket.yml):PersonsBucket}
+    UserPool: ${file(resources/CognitoService.yml):UserPool}
+    UserPoolClient: ${file(resources/CognitoService.yml):UserPoolClient} 
+    UserPoolDomain: ${file(resources/CognitoService.yml):UserPoolDomain} 
+
+functions:
+  createPerson:
+    handler: src/handlers/createperson.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /person
+          cors: true
+          authorizer: serviceAuthorizer
+
+custom:
+  app_acronym: facegevents
+  region: ${opt:region, self:provider.region}
+  stack_name: ${self:custom.app_acronym}-${self:provider.stage}
+  domain_suffix: facegnition-ddns-net-${self:custom.stack_name}
+  app_domain: https://facegnition.ddns.net
+  PersonsTable:
+    name: !Ref PersonsTable
+    arn: !GetAtt PersonsTable.Arn
+  EventsTable:
+    name: !Ref EventsTable
+    arn: !GetAtt EventsTable.Arn
+  PersonsBucket:
+    name: persons-${self:custom.stack_name}
